@@ -1,2 +1,2 @@
 # EcommerceToys
-Backend Repository for this EcommerceToys
+Backend Repository for EcommerceToys Project

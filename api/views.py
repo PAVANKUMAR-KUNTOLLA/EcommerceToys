@@ -16,7 +16,7 @@ from rest_framework import status #pagination
 from toys.settings import MEDIA_ROOT
 
 @api_view(["GET",])
-def index(request):
+def products(request):
     df = pd.read_csv(os.path.join(MEDIA_ROOT, "Products", "toys_data.csv"))
     df = df[["type", "title", "price", "image_0"]]
     data = df.to_dict(orient="records")

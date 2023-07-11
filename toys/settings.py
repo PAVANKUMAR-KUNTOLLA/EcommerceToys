@@ -38,9 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     'corsheaders',
+    'corsheaders',
     'rest_framework',
-    'api',
+    'rest_framework.authtoken',
+    'users',
+    'products',
     
 ]
 
@@ -133,3 +135,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_PASSWORD = 'City@Scientist1' #sender mail password
+EMAIL_HOST_USER = 'contact@ongil.io' #sender mail username
+EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_TO_EMAIL = 'contact@ongil.io'

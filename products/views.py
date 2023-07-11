@@ -15,12 +15,15 @@ from rest_framework import status #pagination
 
 from toys.settings import MEDIA_ROOT
 
+def index(request):
+    return render(request, 'index.html')
+
 @api_view(["GET","POST"])
 def products(request):
     try:
         df = pd.read_csv(os.path.join(MEDIA_ROOT, "Products", "toys_data.csv"))
         if request.method == "GET":
-            df = df[["category", "title", "price","image_0", "is_favourite"]]
+            df = df[["category", "title", "price","image_0", "is_favourite", "is_item_in_cart"]]
             data = df.to_dict(orient="records")
             context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
             return Response(data=context, status=status.HTTP_200_OK)

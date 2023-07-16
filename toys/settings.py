@@ -107,6 +107,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'users.User'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -125,6 +126,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = (
+  os.path.join(BASE_DIR, 'stat'),
+)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -139,8 +144,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_PASSWORD = 'City@Scientist1' #sender mail password
-EMAIL_HOST_USER = 'contact@ongil.io' #sender mail username
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD") #sender mail password
+EMAIL_HOST_USER = config("EMAIL_HOST_USER") #sender mail username
 EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-DEFAULT_TO_EMAIL = 'contact@ongil.io'
+DEFAULT_TO_EMAIL = config("DEFAULT_TO_EMAIL")

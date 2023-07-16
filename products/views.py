@@ -2,38 +2,40 @@ import os
 import io
 import re
 import copy
+import json
 import datetime
 
 from django.http import HttpResponse
 from django.shortcuts import render
 import pandas as pd
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import status #pagination
-# from rest_framework.authentication import TokenAuthentication
-# from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from .models import *
+from users.models import User, UserProducts
 from toys.settings import MEDIA_ROOT
+
+from .helpers import get_products, update_user_product_info
 
 def index(request):
     return render(request, 'index.html')
 
 @api_view(["GET","POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def products(request):
     try:
-        df = pd.read_csv(os.path.join(MEDIA_ROOT, "Products", "toys_data.csv"))
         if request.method == "GET":
-            df = df[["category", "title", "price","image_0", "is_favourite", "is_item_in_cart"]]
-            data = df.to_dict(orient="records")
-            context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            products = get_products(request)
+            context = {"data":products, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
             return Response(data=context, status=status.HTTP_200_OK)
         
         elif request.method == "POST":
-            request_data = request.data.copy()
-            title = request_data["title"]
-            df = df[df["title"]==title]
-            data = df.to_dict(orient="records")
-            context = {"data":data[0], "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            product = get_products(request)
+            context = {"data":product, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
             return Response(data=context, status=status.HTTP_200_OK)
         
         else:
@@ -45,6 +47,8 @@ def products(request):
         return Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def edit_product(request):
     try:
         if request.method == "GET":
@@ -52,23 +56,8 @@ def edit_product(request):
             return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         
         elif request.method == "POST":
-            request_data = request.data.copy()
-            title = request_data["title"]
-            df = pd.read_csv(os.path.join(MEDIA_ROOT, "Products", "toys_data.csv"))
-
-            if "is_favourite" in request_data.keys():
-                df.loc[df.title == title, "is_favourite"] = request_data["is_favourite"]
-            if "is_item_in_cart" in request_data.keys():
-                df.loc[df.title == title, "is_item_in_cart"] = request_data["is_item_in_cart"]
-            if "is_brought" in request_data.keys():
-                df.loc[df.title == title,"is_brought"] = request_data["is_brought"]
-            
-            df.to_csv(os.path.join(MEDIA_ROOT, "Products", "toys_data.csv"), index=False)
-            
-            df = pd.read_csv(os.path.join(MEDIA_ROOT, "Products", "toys_data.csv"))
-            df = df[df["title"]==title]
-            data = df.to_dict(orient="records")
-            context = {"data":data[0], "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            data = update_user_product_info(request)
+            context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
             return Response(data=context, status=status.HTTP_200_OK)
         
         else:

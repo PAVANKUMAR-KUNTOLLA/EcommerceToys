@@ -1,5 +1,6 @@
 from django.db import models
 from crum import get_current_user
+from users.models import User
 
 # Create your models here.
 
@@ -17,6 +18,8 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         user = get_current_user()
+        if not user:
+            user=User.objects.get(id=1)
         self.created_by_user = user
         super(Product, self).save(*args, **kwargs)
 
@@ -33,6 +36,8 @@ class Category(models.Model):
 
     def save(self, *args, **kwargs):
         user = get_current_user()
+        if not user:
+            user=User.objects.get(id=1)
         self.created_by_user = user
         super(Category, self).save(*args, **kwargs)
 

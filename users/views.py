@@ -11,8 +11,10 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-
-from .models import ROLE_CHOICES
+from .serializers import *
+from toys.settings import DEFAULT_FROM_EMAIL
+from django.core.mail import EmailMessage
+from rest_framework.authtoken.models import Token
 
 # Create your views here.
 @api_view(['POST'])
@@ -20,7 +22,7 @@ def signup(request):
     try:
         if request.method == "POST":
             data = request.data.copy()
-
+            print(DEFAULT_FROM_EMAIL)
             signup_serializer = SignupSerializer(
                 data=data, context={'request': request})
             signup_serializer.is_valid(raise_exception=True)
@@ -42,8 +44,8 @@ def signup(request):
             user_data = signup_serializer.data
             # Email
             
-            subject = 'User Signed Up - Warehouse Benchmarking Tool Demo'
-            message = f'"This is an Automated Mail" \n\nHi {user_data["name"]}, \nYou have successfully signed-up for a user account, for the Warehouse Benchmarking Digitisation Tool. You will be able to login once your account is activated by an Admin user. .\n\nregards,\nWarehouse Benchmarking Digitisation Team'
+            subject = 'User Signed Up - Ecommerce Toys Store'
+            message = f'"This is an Automated Mail" \n\nHi {user_data["name"]}, \nYou have successfully signed-up for a user account, for the Ecommerce Toys Store. You can login now.\n\nregards,\nEcommerce Toys Store Digitisation Team'
             from_email = DEFAULT_FROM_EMAIL
             to = [user_data["email"], ]
             email = EmailMessage(subject, message, from_email, to)
@@ -72,28 +74,6 @@ def signup(request):
         status_code = status.HTTP_400_BAD_REQUEST
         context = {"data":context, "status_flag":status_flag, "status":status_code, "message":message}
         return Response(status=status_code, data= context)
-
-
-@api_view(['GET'])
-def roles_list(request):
-    if request.method == "GET":
-        roles = [each[0] for each in ROLE_CHOICES]
-        
-        context = roles
-        status_flag = True
-        message = None
-        status_code = status.HTTP_200_OK
-        context = {"data":context, "status_flag":status_flag, "status":status_code, "message":message}
-        return Response(status=status_code, data= context)
-
-    else:
-        context = None
-        status_flag = False
-        message = "Only Get Method available"
-        status_code = status.HTTP_405_METHOD_NOT_ALLOWED
-        context = {"data":context, "status_flag":status_flag, "status":status_code, "message":message}
-        return Response(status=status_code, data= context)
-
 
 @api_view(['POST'])
 def login(request):

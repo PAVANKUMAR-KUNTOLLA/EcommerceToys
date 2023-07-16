@@ -30,7 +30,6 @@ def get_products(request):
     else:
         products = Product.objects.all().values()
     user_products = UserProducts.objects.filter(user__id=request.user.id).values()
-    print(user_products)
     
     return_dict = []
     for index, each in enumerate(products):

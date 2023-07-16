@@ -16,6 +16,11 @@ from toys.settings import DEFAULT_FROM_EMAIL
 from django.core.mail import EmailMessage
 from rest_framework.authtoken.models import Token
 
+# reset password imports
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+
 # Create your views here.
 @api_view(['POST'])
 def signup(request):

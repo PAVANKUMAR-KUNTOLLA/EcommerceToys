@@ -13,3 +13,15 @@ class UserProductsAdmin(admin.ModelAdmin):
     list_display = ['user', 'product', 'is_favourite', 'is_item_in_cart', 'quantity', 'is_brought']
     search_fields = ['user','product']
     list_filter = ['user', 'product']
+
+@admin.register(UserOrderHistory)
+class UserOrderHistoryAdmin(admin.ModelAdmin):
+    list_display = ['user', 'product', 'quantity', 'price', 'updated_at']
+    search_fields = ['user','product']
+    list_filter = ['user', 'product']
+
+@admin.register(UserProductVisitHistory)
+class UserProductVisitHistoryAdmin(admin.ModelAdmin):
+    list_display = ['user', 'product', 'count', 'updated_at']
+    search_fields = ['user','product']
+    list_filter = ['user', 'product']

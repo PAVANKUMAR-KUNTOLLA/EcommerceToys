@@ -1,8 +1,11 @@
-from products.models import Product, Category
-from users.models import User, UserProducts
 import os
+import copy
 import json
 import pandas as pd
+
+from django.db.models import Q
+from products.models import Product, Category
+from users.models import User, UserProducts, UserOrderHistory, UserProductVisitHistory
 
 def create_products():
     df = pd.read_csv(os.path.join("media", "Products", "toys_data.csv"))
@@ -23,12 +26,34 @@ def create_products():
     return
 
 def get_products(request):
-    if "title" in request.data.keys():
-        request_data = request.data.copy()
-        title = request_data["title"]
-        products = Product.objects.filter(title=title).values()
-    else:
-        products = Product.objects.all().values()
+    request_data = request.data.copy()
+    
+    products = Product.objects.all()
+    
+    if request.method == "POST":
+        if "search" in request_data and request_data["search"]:
+            products = products.filter(Q(title__startswith=request_data["search"])|Q(category__name__startswith=request_data["search"]))
+    
+        elif any([request_data[each] != None for each in ["category", "character", "price"] if each in request_data]):
+            filter_dict = dict()
+            if "category" in request_data.keys() and request_data["category"]:
+                filter_dict["category__name"] = request_data['category']
+
+            if "character" in request_data.keys() and request_data["character"]:
+                filter_dict["title__startswith"] = request_data['character']
+
+            if "price" in request_data.keys() and request_data["price"]:
+                if not request_data["price"] == "above 100000":
+                    filter_dict["price__lte"] = request_data["price"].split('-')[1]
+                    filter_dict["price__gte"] = request_data["price"].split('-')[0]
+                else:
+                    filter_dict["price__gte"] = request_data["price"].split(' ')[1]
+        
+            if filter_dict:
+                products = products.filter(**filter_dict)
+
+    products = products.distinct().values()
+        
     user_products = UserProducts.objects.filter(user__id=request.user.id).values()
     
     return_dict = []
@@ -57,18 +82,16 @@ def get_products(request):
             each_prod["is_brought"] = False
         return_dict.append(each_prod)
 
-    if len(return_dict) == 1:
-        return_dict = return_dict[0]
     return return_dict
 
 def update_user_product_info(request):
-    if "title" in request.data.keys():
+    if "id" in request.data.keys():
         request_data = request.data.copy()
         user = User.objects.get(id=request.user.id)
-        title = request_data["title"]
-        product = Product.objects.get(title=title)
+        id = request_data["id"]
+        product = Product.objects.get(id=id)
    
-        if UserProducts.objects.filter(user__id=user.id, product__title=title).exists():
+        if UserProducts.objects.filter(user__id=user.id, product__id=id).exists():
             user_product_ins = UserProducts.objects.get(user__id=request.user.id, product__id=product.id)
         else:
             user_product_ins = UserProducts.objects.create(user=user, product=product)
@@ -79,21 +102,87 @@ def update_user_product_info(request):
             user_product_ins.is_item_in_cart = request_data["is_item_in_cart"]
         if "quantity" in request_data.keys():
             user_product_ins.quantity = request_data["quantity"]
-        if "is_brought" in request_data.keys():
-            user_product_ins.is_brought = request_data["is_brought"]
 
         user_product_ins.save()
-
-        return_dict = {"id":product.id, "title":product.title, "description":product.description, "price":product.price, "category":product.category.name}
-        images = json.loads(product.images)
-        for index, each_img in enumerate(images):
-            return_dict[f'image_{index}']=each_img
-
-        return_dict["is_favourite"] = user_product_ins.is_favourite
-        return_dict["is_item_in_cart"] = user_product_ins.is_item_in_cart
-        return_dict["quantity"] = user_product_ins.quantity
-        return_dict["is_brought"] = user_product_ins.is_brought
     else:
-        raise Exception("Product title is Required")
+        raise Exception("Product Id is Required")
+
+def place_order_helper(request):
+    request_data = request.data.copy()
+    user = User.objects.get(id=request.user.id)
+    if len(request_data) == 0:
+        raise Exception("Products Info is required")
+    for index, each in enumerate(request_data):
+        try:
+            if UserProducts.objects.filter(user__id=user.id, product__id=each["id"]).exists():
+                product = Product.objects.get(id=each["id"])
+                user_product_ins = UserProducts.objects.get(user__id=user.id, product__id=each["id"])
+            else:
+                raise Exception("Requested product is not in your cart")
+
+            if user_product_ins.quantity == 0:
+                raise Exception("please select the quantity")
+
+            if not user_product_ins.is_item_in_cart:
+                raise Exception("please add the product to cart")
+           
+            order_ins = UserOrderHistory.objects.create(user=user, product=product, quantity=user_product_ins.quantity, price=product.price)
+            order_ins.save()
+
+            user_product_ins.quantity=0
+            user_product_ins.is_item_in_cart=False
+            user_product_ins.is_brought = True
+            user_product_ins.save()
+        except Exception as excepted_message:
+            print(excepted_message)
+            raise Exception(excepted_message)
+
+def get_relevant_products(request):
+    if "id" in request.data.keys():
+        request_data = request.data.copy()
+        user = User.objects.get(id=request.user.id)
+        products = Product.objects.all()
+
+        product = Product.objects.get(id=request_data["id"])
+        products = products.filter(Q(title__startswith=product.title.split(' ')[0])|Q(title__startswith=product.title.split(' ')[1])|Q(category__name=product.category))
+
+        products = products.distinct().values()
+            
+        user_products = UserProducts.objects.filter(user__id=user.id).values()
         
-    return return_dict
+        return_dict = []
+        for index, each in enumerate(products):
+            is_product_related_to_user = False
+            each_prod = {"id":each["id"], "title":each["title"], "description":each["description"], "price":each["price"]}
+            each_prod["category"] = Category.objects.get(id=each["category_id"]).name
+            images = json.loads(each["images"])
+            for index2, each_img in enumerate(images):
+                each_prod[f'image_{index2}']=each_img
+
+            for prod in user_products:
+                if prod["product_id"]==each["id"]:
+                    each_prod["is_favourite"] = prod["is_favourite"]
+                    each_prod["is_item_in_cart"] = prod["is_item_in_cart"]
+                    each_prod["quantity"] = prod["quantity"]
+                    each_prod["is_brought"] = prod["is_brought"]
+                    is_product_related_to_user = True
+                    break
+                else:
+                    continue
+            if not is_product_related_to_user:
+                each_prod["is_favourite"] = False
+                each_prod["is_item_in_cart"] = False
+                each_prod["quantity"] = 0
+                each_prod["is_brought"] = False
+            return_dict.append(each_prod)
+
+        if UserProductVisitHistory.objects.filter(user__id=user.id, product__id=product.id).exists():
+           user_product_history_ins = UserProductVisitHistory.objects.get(user__id=user.id, product__id=product.id)
+           user_product_history_ins.count = user_product_history_ins.count + 1
+        else:
+            user_product_history_ins  = UserProductVisitHistory.objects.create(user=user, product=product)
+            user_product_history_ins.count=1
+        user_product_history_ins.save()
+        return return_dict
+    else:
+        raise Exception("Product Id is required")

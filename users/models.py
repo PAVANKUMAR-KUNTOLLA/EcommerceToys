@@ -37,7 +37,6 @@ class User(AbstractUser):
     
     updated_at = models.DateTimeField(auto_now=True, editable=False)
     account_terminated = models.BooleanField(default=False, editable=False)
-    products = models.ManyToManyField('users.UserProducts', blank=True, related_name="user_products")
 
     objects = UserManager()
     
@@ -78,3 +77,34 @@ class UserProducts(models.Model):
 
     class Meta:
         verbose_name_plural = "User Products"
+
+class UserOrderHistory(models.Model):
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, editable=False)
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, editable=False)
+    quantity = models.IntegerField(default=1, editable=False)
+    price = models.FloatField(default=0, editable=False)
+    updated_at = models.DateTimeField(auto_now_add=True, editable=False)
+    
+    def __str__(self):
+        return str(self.product)
+
+    def save(self, *args, **kwargs):
+        super(UserOrderHistory, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name_plural = "User Order History"
+
+class UserProductVisitHistory(models.Model):
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, editable=False)
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, editable=False)
+    count = models.IntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    
+    def __str__(self):
+        return str(self.product)
+
+    def save(self, *args, **kwargs):
+        super(UserProductVisitHistory, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name_plural = "User Product Visit History"

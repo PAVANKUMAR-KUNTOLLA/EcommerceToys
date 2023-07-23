@@ -4,7 +4,6 @@ import re
 import copy
 import json
 import datetime
-
 from django.http import HttpResponse
 from django.shortcuts import render
 import pandas as pd
@@ -18,7 +17,7 @@ from .models import *
 from users.models import User, UserProducts
 from toys.settings import MEDIA_ROOT
 
-from .helpers import get_products, update_user_product_info
+from .helpers import get_products, update_user_product_info, place_order_helper, get_relevant_products
 
 def index(request):
     return render(request, 'index.html')
@@ -49,6 +48,29 @@ def products(request):
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
+def related_products(request):
+    try:
+        if request.method == "GET":
+            products = get_products(request)
+            context = {"data":products, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            return Response(data=context, status=status.HTTP_200_OK)
+        
+        elif request.method == "POST":
+            product = get_relevant_products(request)
+            context = {"data":product, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            return Response(data=context, status=status.HTTP_200_OK)
+        
+        else:
+            context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only POST & GET Method available"}
+            return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    except Exception as excepted_message:
+        print(str(excepted_message))
+        context = {"data":None, "status_flag":False, "status":status.HTTP_400_BAD_REQUEST, "message":str(excepted_message)}
+        return Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def edit_product(request):
     try:
         if request.method == "GET":
@@ -56,8 +78,32 @@ def edit_product(request):
             return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         
         elif request.method == "POST":
-            data = update_user_product_info(request)
+            update_user_product_info(request)
+            data = get_products(request)
             context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            return Response(data=context, status=status.HTTP_200_OK)
+        
+        else:
+            context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only POST Method available"}
+            return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    except Exception as excepted_message:
+        print(str(excepted_message))
+        context = {"data":None, "status_flag":False, "status":status.HTTP_400_BAD_REQUEST, "message":str(excepted_message)}
+        return Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def place_order(request):
+    try:
+        if request.method == "GET":
+            context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only GET Method available"}
+            return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+        elif request.method == "POST":
+            place_order_helper(request)
+            data = get_products(request)
+            context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":"Order Placed Successfully"}
             return Response(data=context, status=status.HTTP_200_OK)
         
         else:

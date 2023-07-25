@@ -1,5 +1,5 @@
 """
-WSGI config for toys project.
+WSGI config for toysStore project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'toys.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'toysStore.settings')
 
 application = get_wsgi_application()

@@ -14,7 +14,6 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.is_active = True
         user.save()
         return user
 
@@ -35,9 +34,11 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
     
+    products = models.ManyToManyField('users.UserProducts', blank=True, related_name="user_products")
+    orders = models.ManyToManyField("users.UserOrderHistory", blank=True, related_name="user_order_history")
+
     updated_at = models.DateTimeField(auto_now=True, editable=False)
     account_terminated = models.BooleanField(default=False, editable=False)
-
     objects = UserManager()
     
     def __str__(self):
@@ -67,10 +68,11 @@ class UserProducts(models.Model):
     is_item_in_cart = models.BooleanField(default=False)
     quantity = models.IntegerField(default=0)
     is_brought = models.BooleanField(default=False)
+    view_count =  models.IntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
     
     def __str__(self):
-        return str(self.product)
+        return str(self.product.title)
 
     def save(self, *args, **kwargs):
         super(UserProducts, self).save(*args, **kwargs)
@@ -83,10 +85,10 @@ class UserOrderHistory(models.Model):
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, editable=False)
     quantity = models.IntegerField(default=1, editable=False)
     price = models.FloatField(default=0, editable=False)
-    updated_at = models.DateTimeField(auto_now_add=True, editable=False)
+    order_date = models.DateTimeField(auto_now_add=True, editable=False)
     
     def __str__(self):
-        return str(self.product)
+        return str(self.product.title)
 
     def save(self, *args, **kwargs):
         super(UserOrderHistory, self).save(*args, **kwargs)
@@ -94,17 +96,3 @@ class UserOrderHistory(models.Model):
     class Meta:
         verbose_name_plural = "User Order History"
 
-class UserProductVisitHistory(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, editable=False)
-    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, editable=False)
-    count = models.IntegerField(default=1)
-    updated_at = models.DateTimeField(auto_now=True, editable=False)
-    
-    def __str__(self):
-        return str(self.product)
-
-    def save(self, *args, **kwargs):
-        super(UserProductVisitHistory, self).save(*args, **kwargs)
-
-    class Meta:
-        verbose_name_plural = "User Product Visit History"

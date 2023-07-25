@@ -12,10 +12,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .serializers import *
-from toys.settings import DEFAULT_FROM_EMAIL
+from toysStore.settings import DEFAULT_FROM_EMAIL
 from django.core.mail import EmailMessage
 from rest_framework.authtoken.models import Token
-from .helpers import get_order_history, get_visit_history
 
 # reset password imports
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -127,8 +126,6 @@ def profile(request):
         user = request.user
         if request.method == 'GET':
             profile_data = UserProfileSerializer(instance=user).data
-            profile_data["order_history"] = get_order_history(request.user.email)
-            profile_data["visit_history"] = get_visit_history(request.user.email)
             
             context = profile_data
             status_flag = True

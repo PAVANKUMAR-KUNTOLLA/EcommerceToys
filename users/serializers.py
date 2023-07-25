@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import validate_email
 from rest_framework import serializers
-from users.models import User
+from users.models import *
 
 import datetime
 
@@ -60,7 +60,37 @@ class AuthenticationSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+
+class UserProductsSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+    visited_at = serializers.SerializerMethodField()
+    class Meta:
+        model = UserProducts
+        fields = ['id', 'title', 'is_favourite', 'is_item_in_cart', 'view_count', 'is_brought', 'visited_at']
+
+    def get_title(self, instance):
+        return instance.product.title
+
+    def get_visited_at(self, instance):
+        return instance.updated_at.strftime("%d %b %Y")
+
+
+class UserOrderHistorySerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+    order_date = serializers.SerializerMethodField()
+    class Meta:
+        model = UserOrderHistory
+        fields = ['id', 'title', 'price', 'quantity', 'order_date']
+
+    def get_title(self, instance):
+        return instance.product.title
+    
+    def get_order_date(self, instance):
+        return instance.order_date.strftime("%d %b %Y")
+
 class UserProfileSerializer(serializers.ModelSerializer):
+    products = UserProductsSerializer(read_only=True, many=True)
+    orders = UserOrderHistorySerializer(read_only=True, many=True)
     class Meta:
         model = User
-        fields = ('id', 'name', 'email')
+        fields = ['id', 'name', 'email', "products", "orders"]

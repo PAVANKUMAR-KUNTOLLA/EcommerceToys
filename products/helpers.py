@@ -5,7 +5,7 @@ import pandas as pd
 
 from django.db.models import Q
 from products.models import Product, Category
-from users.models import User, UserProducts, UserOrderHistory, UserProductVisitHistory
+from users.models import User, UserProducts, UserOrderHistory
 
 def create_products():
     df = pd.read_csv(os.path.join("media", "Products", "toys_data.csv"))
@@ -95,6 +95,8 @@ def update_user_product_info(request):
             user_product_ins = UserProducts.objects.get(user__id=request.user.id, product__id=product.id)
         else:
             user_product_ins = UserProducts.objects.create(user=user, product=product)
+            user.products.add(user_product_ins)
+            user.save()
 
         if "is_favourite" in request_data.keys():
             user_product_ins.is_favourite = request_data["is_favourite"]
@@ -128,6 +130,9 @@ def place_order_helper(request):
            
             order_ins = UserOrderHistory.objects.create(user=user, product=product, quantity=user_product_ins.quantity, price=product.price)
             order_ins.save()
+
+            user.orders.add(order_ins)
+            user.save()
 
             user_product_ins.quantity=0
             user_product_ins.is_item_in_cart=False
@@ -176,13 +181,15 @@ def get_relevant_products(request):
                 each_prod["is_brought"] = False
             return_dict.append(each_prod)
 
-        if UserProductVisitHistory.objects.filter(user__id=user.id, product__id=product.id).exists():
-           user_product_history_ins = UserProductVisitHistory.objects.get(user__id=user.id, product__id=product.id)
-           user_product_history_ins.count = user_product_history_ins.count + 1
+        if UserProducts.objects.filter(user__id=user.id, product__id=product.id).exists():
+           user_product_ins = UserProducts.objects.get(user__id=user.id, product__id=product.id)
+           user_product_ins.view_count = user_product_ins.view_count + 1
         else:
-            user_product_history_ins  = UserProductVisitHistory.objects.create(user=user, product=product)
-            user_product_history_ins.count=1
-        user_product_history_ins.save()
+            user_product_ins  = UserProducts.objects.create(user=user, product=product)
+            user_product_ins.view_count=1
+            user.products.add(user_product_ins)
+            user.save()
+        user_product_ins.save()
         return return_dict
     else:
         raise Exception("Product Id is required")

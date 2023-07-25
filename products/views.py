@@ -14,8 +14,8 @@ from rest_framework import status #pagination
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .models import *
-from users.models import User, UserProducts
-from toys.settings import MEDIA_ROOT
+from users.models import User
+from toysStore.settings import MEDIA_ROOT
 
 from .helpers import get_products, update_user_product_info, place_order_helper, get_relevant_products
 

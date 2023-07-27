@@ -51,9 +51,8 @@ def products(request):
 def related_products(request):
     try:
         if request.method == "GET":
-            products = get_products(request)
-            context = {"data":products, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
-            return Response(data=context, status=status.HTTP_200_OK)
+            context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only GET Method available"}
+            return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         
         elif request.method == "POST":
             product = get_relevant_products(request)
@@ -61,8 +60,9 @@ def related_products(request):
             return Response(data=context, status=status.HTTP_200_OK)
         
         else:
-            context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only POST & GET Method available"}
+            context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only POST Method available"}
             return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
     except Exception as excepted_message:
         print(str(excepted_message))
         context = {"data":None, "status_flag":False, "status":status.HTTP_400_BAD_REQUEST, "message":str(excepted_message)}

@@ -66,7 +66,8 @@ class UserProductsSerializer(serializers.ModelSerializer):
     visited_at = serializers.SerializerMethodField()
     class Meta:
         model = UserProducts
-        fields = ['id', 'title', 'is_favourite', 'is_item_in_cart', 'view_count', 'is_brought', 'visited_at']
+        fields = ['id', 'title', 'is_favourite', 'is_item_in_cart', 'view_count', 'is_brought', 'visited_at'] 
+        
 
     def get_title(self, instance):
         return instance.product.title

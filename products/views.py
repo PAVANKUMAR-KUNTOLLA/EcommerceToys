@@ -17,7 +17,7 @@ from .models import *
 from users.models import User
 from toysStore.settings import MEDIA_ROOT
 
-from .helpers import get_products, update_user_product_info, place_order_helper, get_relevant_products
+from .helpers import get_products, update_user_product_info, place_order_helper, record_visit_history_helper
 
 def index(request):
     return render(request, 'index.html')
@@ -48,15 +48,15 @@ def products(request):
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def related_products(request):
+def record_visit_history(request):
     try:
         if request.method == "GET":
             context = {"data":None, "status_flag":False, "status":status.HTTP_405_METHOD_NOT_ALLOWED, "message":"Only GET Method available"}
             return Response(data=context, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         
         elif request.method == "POST":
-            product = get_relevant_products(request)
-            context = {"data":product, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+            message = record_visit_history_helper(request)
+            context = {"data":None, "status_flag":True, "status":status.HTTP_200_OK, "message":message}
             return Response(data=context, status=status.HTTP_200_OK)
         
         else:

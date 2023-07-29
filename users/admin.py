@@ -10,10 +10,10 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(UserProducts)
 class UserProductsAdmin(admin.ModelAdmin):
-    list_display = ['user', 'product', 'is_favourite', 'is_item_in_cart', 'quantity', 'is_brought', 'view_count']
+    list_display = ['user', 'product', 'is_favourite', 'is_item_in_cart', 'quantity', 'is_brought', 'view_count', 'updated_at']
     search_fields = ['user','product']
     list_filter = ['user', 'product']
-    readonly_fields = ['user', 'product', 'is_favourite', 'is_item_in_cart', 'quantity', 'is_brought', 'view_count']
+    readonly_fields = ['user', 'product', 'is_favourite', 'is_item_in_cart', 'quantity', 'is_brought', 'view_count', 'updated_at']
 
 @admin.register(UserOrderHistory)
 class UserOrderHistoryAdmin(admin.ModelAdmin):

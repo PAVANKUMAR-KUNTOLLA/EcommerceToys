@@ -142,45 +142,12 @@ def place_order_helper(request):
             print(excepted_message)
             raise Exception(excepted_message)
 
-def get_relevant_products(request):
+def record_visit_history_helper(request):
     if "id" in request.data.keys():
         request_data = request.data.copy()
         user = User.objects.get(id=request.user.id)
-        products = Product.objects.all()
-
         product = Product.objects.get(id=request_data["id"])
-        products = products.filter(Q(title__startswith=product.title.split(' ')[0])|Q(title__startswith=product.title.split(' ')[1])|Q(category__name=product.category))
-
-        products = products.distinct().values()
-            
-        user_products = UserProducts.objects.filter(user__id=user.id).values()
-        
-        return_dict = []
-        for index, each in enumerate(products):
-            is_product_related_to_user = False
-            each_prod = {"id":each["id"], "title":each["title"], "description":each["description"], "price":each["price"]}
-            each_prod["category"] = Category.objects.get(id=each["category_id"]).name
-            images = json.loads(each["images"])
-            for index2, each_img in enumerate(images):
-                each_prod[f'image_{index2}']=each_img
-
-            for prod in user_products:
-                if prod["product_id"]==each["id"]:
-                    each_prod["is_favourite"] = prod["is_favourite"]
-                    each_prod["is_item_in_cart"] = prod["is_item_in_cart"]
-                    each_prod["quantity"] = prod["quantity"]
-                    each_prod["is_brought"] = prod["is_brought"]
-                    is_product_related_to_user = True
-                    break
-                else:
-                    continue
-            if not is_product_related_to_user:
-                each_prod["is_favourite"] = False
-                each_prod["is_item_in_cart"] = False
-                each_prod["quantity"] = 0
-                each_prod["is_brought"] = False
-            return_dict.append(each_prod)
-
+     
         if UserProducts.objects.filter(user__id=user.id, product__id=product.id).exists():
            user_product_ins = UserProducts.objects.get(user__id=user.id, product__id=product.id)
            user_product_ins.view_count = user_product_ins.view_count + 1
@@ -190,6 +157,6 @@ def get_relevant_products(request):
             user.products.add(user_product_ins)
             user.save()
         user_product_ins.save()
-        return return_dict
+        return user_product_ins.product.title
     else:
         raise Exception("Product Id is required")

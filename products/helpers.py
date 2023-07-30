@@ -3,6 +3,8 @@ import copy
 import json
 import pandas as pd
 
+from toysStore.settings import DEFAULT_FROM_EMAIL
+from django.core.mail import EmailMessage
 from django.db.models import Q
 from products.models import Product, Category
 from users.models import User, UserProducts, UserOrderHistory
@@ -114,6 +116,8 @@ def place_order_helper(request):
     user = User.objects.get(id=request.user.id)
     if len(request_data) == 0:
         raise Exception("Products Info is required")
+    message = f'Hi {user.name}, \n\n Title                                           quantity                     price'
+    total_amount = 0
     for index, each in enumerate(request_data):
         try:
             if UserProducts.objects.filter(user__id=user.id, product__id=each["id"]).exists():
@@ -134,13 +138,24 @@ def place_order_helper(request):
             user.orders.add(order_ins)
             user.save()
 
+            total_amount += user_product_ins.quantity * user_product_ins.product.price
+            message += f'\n{user_product_ins.product.title}                                           {user_product_ins.quantity}                     {user_product_ins.product.price}'
+            
             user_product_ins.quantity=0
             user_product_ins.is_item_in_cart=False
             user_product_ins.is_brought = True
             user_product_ins.save()
+            
         except Exception as excepted_message:
             print(excepted_message)
             raise Exception(excepted_message)
+        
+    subject = 'Ecommerce Toys Store - Order Placed successfully'
+    message += f"\n\n Total                                                    {total_amount}\n\n Thank you.visit again"
+    from_email = DEFAULT_FROM_EMAIL
+    to = [user.email, ]
+    email = EmailMessage(subject, message, from_email, to)
+    email.send()
 
 def record_visit_history_helper(request):
     if "id" in request.data.keys():

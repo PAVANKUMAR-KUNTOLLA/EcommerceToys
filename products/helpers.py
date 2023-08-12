@@ -19,7 +19,7 @@ def create_products():
             for i in range(16):
                 images.append(row[f'image_{i}'])
             images = json.dumps(images)
-            product_ins = Product.objects.filter(title=row["title"], category=category_ins, description=row["description"], price=row["price"], images=images)
+            product_ins = Product.objects.create(title=row["title"], category=category_ins, description=row["description"], price=row["price"], images=images)
             product_ins.save()
             print("successfully created")
         except Exception as excepted_message:

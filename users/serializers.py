@@ -29,7 +29,7 @@ class SignupSerializer(serializers.Serializer):
         password = self.validated_data['password']
 
         user = User.objects.create(name=name, email=email)
-        user.is_active = False
+        user.is_active = True
         user.set_password(password)
 
         user.save()
@@ -90,8 +90,28 @@ class UserOrderHistorySerializer(serializers.ModelSerializer):
         return instance.order_date.strftime("%d %b %Y")
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    products = UserProductsSerializer(read_only=True, many=True)
-    orders = UserOrderHistorySerializer(read_only=True, many=True)
+    history = serializers.SerializerMethodField()
+    order_history = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', "products", "orders"]
+        fields = ['id', 'name', 'email', "history", "order_history"]
+        
+    def get_history(self, instance):
+        return_dict = []
+        products = instance.products.all().order_by("-updated_at")
+        for each_product in products:
+            each_dict = {"id":each_product.id, "title":each_product.product.title, "view_count":each_product.view_count}
+            each_dict["visited_at"] = each_product.updated_at.strftime("%d %b %Y")
+            return_dict.append(each_dict)
+            
+        return return_dict
+            
+    def get_order_history(self, instance):
+        return_dict = []
+        products = instance.orders.all().order_by("-order_date")
+        for each_product in products:
+            each_dict = {"id":each_product.id, "title":each_product.product.title, "price":each_product.product.price, "quantity":each_product.quantity}
+            each_dict["order_date"] = each_product.order_date.strftime("%d %b %Y")
+            return_dict.append(each_dict)
+            
+        return return_dict

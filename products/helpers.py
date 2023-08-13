@@ -27,6 +27,24 @@ def create_products():
             print("Failed")
     return
 
+def update_products():
+    df = pd.read_csv(os.path.join("media", "Products", "toys_data.csv"))
+    for index, row in df.iterrows():
+        try:
+            print(row["title"])
+            category_ins = Category.objects.get(name=row["category"])
+            if not category_ins.name == "statue":
+                continue
+            product_ins = Product.objects.get(title=row["title"], description=row["description"], price=row["price"])
+            if product_ins.category.name == "collectibles":
+                product_ins.category = category_ins
+                product_ins.save()
+            print("successfully updated")
+        except Exception as excepted_message:
+            print(excepted_message)
+            print("Failed")
+    return
+
 def get_products(request):
     request_data = request.data.copy()
     
@@ -34,7 +52,7 @@ def get_products(request):
     
     if request.method == "POST":
         if "search" in request_data and request_data["search"]:
-            products = products.filter(Q(title__startswith=request_data["search"])|Q(category__name__startswith=request_data["search"]))
+            products = products.filter(Q(title__startswith=request_data["search"].capitalize())|Q(category__name__startswith=request_data["search"]))
     
         elif any([request_data[each] != None for each in ["category", "character", "price"] if each in request_data]):
             filter_dict = dict()
@@ -42,7 +60,7 @@ def get_products(request):
                 filter_dict["category__name"] = request_data['category']
 
             if "character" in request_data.keys() and request_data["character"]:
-                filter_dict["title__startswith"] = request_data['character']
+                filter_dict["title__startswith"] = request_data['character'].capitalize()
 
             if "price" in request_data.keys() and request_data["price"]:
                 if not request_data["price"] == "above 100000":

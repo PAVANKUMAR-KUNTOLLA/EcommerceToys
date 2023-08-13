@@ -24,3 +24,5 @@ urlpatterns = [
     path('',include('users.urls')),
     path('',include('products.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404 = 'products.views.serve_app'

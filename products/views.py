@@ -22,6 +22,9 @@ from .helpers import get_products, update_user_product_info, place_order_helper,
 def index(request):
     return render(request, 'index.html')
 
+def serve_app(request, exception):
+    return render(request, 'index.html')
+
 @api_view(["GET","POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])

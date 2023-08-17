@@ -20,6 +20,8 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from products.helpers import get_client_ip
+from .models import User, UserProducts
 
 # Create your views here.
 @api_view(['POST'])
@@ -47,6 +49,14 @@ def signup(request):
             print(signup_serializer.data)
             signup_serializer.save()
             user_data = signup_serializer.data
+
+            user_products = UserProducts.objects.filter(session__ip=get_client_ip(request=request))
+            if user_products:
+                user_ins = User.objects.get(email=user_data["email"])
+                for each_product in user_products:
+                    each_product.user = user_ins
+                    each_product.save()
+
             # Email
             
             subject = 'User Signed Up - Ecommerce Toys Store'
@@ -91,6 +101,14 @@ def login(request):
     data = {
         'token': token.key
     }
+    
+    user_products = UserProducts.objects.filter(session__ip=get_client_ip(request=request))
+    if user_products:
+        user_ins = User.objects.get(email=request.data["email"])
+        for each_product in user_products:
+            each_product.user = user_ins
+            each_product.save()
+
     context = data
     status_flag = True
     message = None

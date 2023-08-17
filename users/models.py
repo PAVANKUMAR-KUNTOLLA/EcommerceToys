@@ -63,12 +63,12 @@ class User(AbstractUser):
     #     super(User, self).save(*args, **kwargs)
 
 class UserProducts(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, editable=False)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, editable=False, blank=True, null=True)
+    session = models.ForeignKey("users.Session", on_delete=models.SET_NULL, blank=True, null=True)
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, editable=False)
     is_favourite = models.BooleanField(default=False)
     is_item_in_cart = models.BooleanField(default=False)
     quantity = models.IntegerField(default=0)
-    is_brought = models.BooleanField(default=False)
     view_count =  models.IntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
     
@@ -80,6 +80,7 @@ class UserProducts(models.Model):
 
     class Meta:
         verbose_name_plural = "User Products"
+        unique_together = ['user', 'session', 'product']
 
 class UserOrderHistory(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, editable=False)
@@ -96,4 +97,17 @@ class UserOrderHistory(models.Model):
 
     class Meta:
         verbose_name_plural = "User Order History"
+
+class Session(models.Model):
+    ip = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+    def __str__(self):
+        return str(self.ip)
+
+    def save(self, *args, **kwargs):
+        super(Session, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name_plural = "Session"
 

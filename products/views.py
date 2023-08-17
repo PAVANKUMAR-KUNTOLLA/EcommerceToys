@@ -9,10 +9,10 @@ from django.shortcuts import render
 import pandas as pd
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import TokenAuthentication
+from .myauth import TokenAuthenticationSafe
 from rest_framework import status #pagination
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import *
 from users.models import User
 from toysStore.settings import MEDIA_ROOT
@@ -26,8 +26,8 @@ def serve_app(request, exception):
     return render(request, 'index.html')
 
 @api_view(["GET","POST"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthenticationSafe])
+@permission_classes([AllowAny])
 def products(request):
     try:
         if request.method == "GET":
@@ -49,8 +49,8 @@ def products(request):
         return Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthenticationSafe])
+@permission_classes([AllowAny])
 def record_visit_history(request):
     try:
         if request.method == "GET":
@@ -72,8 +72,8 @@ def record_visit_history(request):
         return Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthenticationSafe])
+@permission_classes([AllowAny])
 def edit_product(request):
     try:
         if request.method == "GET":

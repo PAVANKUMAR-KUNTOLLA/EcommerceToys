@@ -1,0 +1,52 @@
+{
+  "title": "Activities",
+  "subtitle": "May-June 2021",
+  "x_field": "week",
+  "y_field": "count",
+  "data": {
+    "Users": [
+      {
+        "week": "week 1",
+        "count": 100
+      },
+      {
+        "week": "week 2",
+        "count": 400
+      },
+      {
+        "week": "week 3",
+        "count": 125
+      },
+      {
+        "week": "week 4",
+        "count": 340
+      },
+      {
+        "week": "week 5",
+        "count": 420
+      }
+    ],
+    "Guest": [
+      {
+        "week": "week 1",
+        "count": 200
+      },
+      {
+        "week": "week 2",
+        "count": 420
+      },
+      {
+        "week": "week 3",
+        "count": 175
+      },
+      {
+        "week": "week 4",
+        "count": 320
+      },
+      {
+        "week": "week 5",
+        "count": 400
+      }
+    ]
+  }
+}

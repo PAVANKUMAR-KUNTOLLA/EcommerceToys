@@ -25,6 +25,20 @@ def index(request):
 def serve_app(request, exception):
     return render(request, 'index.html')
 
+@api_view(['GET'])
+def product_share(request):
+    with open(os.path.join(MEDIA_ROOT, "files", "products.json"), 'r') as f:
+        data = json.load(f)
+    context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+    return Response(data=context, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def activity(request):
+    with open(os.path.join(MEDIA_ROOT, "files", "activity.json"), 'r') as f:
+        data = json.load(f)
+    context = {"data":data, "status_flag":True, "status":status.HTTP_200_OK, "message":None}
+    return Response(data=context, status=status.HTTP_200_OK)
+
 @api_view(["GET","POST"])
 @authentication_classes([TokenAuthenticationSafe])
 @permission_classes([AllowAny])
